@@ -12,7 +12,7 @@ enum GameDifficulty: CustomStringConvertible {
     case level(Int)
     
     var description: String {
-        return NSLocalizedString("\(self)", comment: "")
+        return NSLocalizedString("level \(self.rawValue)", comment: "")
     }
     
     var rawValue: Int {
@@ -22,28 +22,41 @@ enum GameDifficulty: CustomStringConvertible {
     }
     
     var size: (columns: Int, rows: Int) {
-        switch self {
-        case .level(1):
-            return (9, 9)
-        case .level(2):
-            return (10, 11)
-        case .level(3):
-            return (10, 14)
+        switch rawValue {
+        case 1:
+            return (6, 6)
+        case 2...8:
+            return (8, 8)
+        case 9...20:
+            return (10, 10)
         default:
-            return (11, 15)
+            return (12, 12)
         }
     }
     
     var mines: Int {
-        switch self {
-        case .level(1):
-            return 10
-        case .level(2):
-            return 16
-        case .level(3):
-            return 26
+        switch rawValue {
+        case 1:
+            return 6
+        case 2...4:
+            return 8
+        case 5...8:
+            return 12
+        case 9...20:
+            return 20
         default:
-            return 35
+            return max(rawValue/2, 24)
+        }
+    }
+    
+    static var last: GameDifficulty {
+        get {
+            let lvl = UserDefaults.standard.integer(forKey: "lvl")
+            return 1...80 ~= lvl ? .level(lvl) : .level(1)
+        }
+        
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: "lvl")
         }
     }
 }

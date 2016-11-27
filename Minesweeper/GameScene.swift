@@ -12,8 +12,9 @@ import GameplayKit
 class GameScene: SKScene {
     
     var tileSize: CGFloat
-    var game = Game(difficulty: .level(1))
+    var game = Game(difficulty: GameDifficulty.last)
     var selectedPosition: GridPosition?
+    var colorTheme: ColorTheme
     
     let gameLayer = SKNode()
     let tilesLayer = SKNode()
@@ -29,6 +30,7 @@ class GameScene: SKScene {
     
     required init?(coder aDecoder: NSCoder) {
         tileSize = 64
+        colorTheme = UIColor.colorTheme(colors: Direction.all.count)
         super.init(coder: aDecoder)
     }
     
@@ -37,6 +39,7 @@ class GameScene: SKScene {
         let rows = game.difficulty.size.rows
         
         self.tileSize = min(size.width / CGFloat(columns), size.height / CGFloat(rows))
+        colorTheme = UIColor.colorTheme(colors: Direction.all.count)
         super.init(size: size)
     }
     
@@ -55,19 +58,20 @@ class GameScene: SKScene {
     
     override func didMove(to view: SKView) {
         addLayers()
-        renderTiles()
         label = childNode(withName: "helloLabel") as? SKLabelNode
         label?.position = CGPoint(x: 0, y: -tilesLayer.position.y + label!.frame.size.height/2)
         
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(GameScene.onLongPress(sender:)))
         view.addGestureRecognizer(longPress)
+        
+         newGame()
     }
     
     func renderTiles() {
         tilesLayer.removeAllChildren()
         for row in 0..<rows {
             for column in 0..<columns {
-                let node = SKShapeNode.tile(game.board[column, row]!.tileType, ofSize: tileSize)
+                let node = SKShapeNode.tile(game.board[column, row]!.tileType, ofSize: tileSize, colorTheme: colorTheme)
                 node.position = pointFrom(position: (column: column, row: row))
                 tilesLayer.addChild(node)
             }
@@ -75,10 +79,22 @@ class GameScene: SKScene {
     }
     
     func newGame() {
+        tilesLayer.removeAllChildren()
         selectedPosition = nil
+        colorTheme = UIColor.colorTheme(colors: Direction.all.count)
+        
+        var newDifficulty = game.difficulty.rawValue
+        if game.isOver && game.isWon {
+            newDifficulty += 1
+            GameDifficulty.last = .level(newDifficulty)
+        }
+        
         label?.text = "🙂"
-        game = Game(difficulty: GameDifficulty.level(game.difficulty.rawValue + 1))
+        game = Game(difficulty: GameDifficulty.last)
+        tileSize = min(size.width / CGFloat(game.difficulty.size.columns), size.height / CGFloat(game.difficulty.size.rows))
+        
         renderTiles()
+        print("lvl", game.difficulty)
     }
     
     // MARK: Event handling
