@@ -64,9 +64,9 @@ class GameScene: SKScene {
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(GameScene.onLongPress(sender:)))
         view.addGestureRecognizer(longPress)
         
-         newGame()
+        newGame()
     }
-
+    
     func renderTiles() {
         let oldBoard = tilesLayer.children
         var newBoard = [SKNode]()
@@ -78,7 +78,7 @@ class GameScene: SKScene {
                 node.position = pointFrom(position: (column: column, row: row))
                 node.name = "\(column), \(row), \(tileType.hashValue)" //😒
                 newBoard.append(node)
-                if !oldBoard.contains{ $0.name == node.name } {
+                if !oldBoard.contains{ $0.name == node.name }, tileType != .flagged {
                     node.alpha = 0
                     let action = SKAction.fadeIn(withDuration: 0.5)
                     node.run(action)
@@ -133,21 +133,44 @@ class GameScene: SKScene {
         
         if !game.isOver {
             game.play(at: selectedPosition)
+            run(SKAction.sequence([
+                    SKAction.run {
+                        self.label?.text = "😮"
+                    }
+                ]))
+            
             renderTiles()
         }
         
         if game.isOver {
-            label?.text = game.isWon ? "😎" : "☹️"
+            run(SKAction.sequence([
+                SKAction.wait(forDuration: 0.5, withRange: 1),
+                SKAction.run {
+                    self.label?.text = self.game.isWon ? "😎" : "☹️"
+                }
+                ]))
+            
+            
             if !game.isWon {
                 let node = SKSpriteNode.highlightedTile(ofSize: tileSize)
                 node.position = pointFrom(position: selectedPosition)
                 tilesLayer.addChild(node)
             }
+        } else {
+            run(SKAction.sequence([
+                SKAction.wait(forDuration: 0.5, withRange: 1),
+                SKAction.run {
+                    self.label?.text = "🙂"
+                }
+                ]))
         }
     }
     
     func onLongPress(sender: UILongPressGestureRecognizer) {
         guard let selectedPosition = selectedPosition, !game.isOver else { return }
+        guard let tileType = game.board[selectedPosition]?.tileType,
+            tileType == .flagged || tileType == .unrevealed else { return }
+        
         if sender.state == .began {
             label?.text = "🤔"
             game.toggleFlag(at: selectedPosition)
