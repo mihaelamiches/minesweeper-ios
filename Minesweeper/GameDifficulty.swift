@@ -21,6 +21,7 @@ enum GameDifficulty: CustomStringConvertible {
         }
     }
     
+    //https://media.giphy.com/media/3oz8xLd9DJq2l2VFtu/giphy.gif
     var size: (columns: Int, rows: Int) {
         switch rawValue {
         case 1:
@@ -34,6 +35,7 @@ enum GameDifficulty: CustomStringConvertible {
         }
     }
     
+    //https://media.giphy.com/media/3oz8xLd9DJq2l2VFtu/giphy.gif
     var mines: Int {
         switch rawValue {
         case 1:

@@ -8,8 +8,8 @@
 
 import SpriteKit
 
-extension SKShapeNode {
-    static func tile(_ type: TileType, ofSize tileSize: CGFloat, colorTheme: ColorTheme) -> SKShapeNode {
+extension SKSpriteNode {
+    static func tile(_ type: TileType, ofSize tileSize: CGFloat, colorTheme: ColorTheme) -> SKSpriteNode {
         let nodeSize = CGSize(width: tileSize, height: tileSize)
         let tileNode = SKShapeNode(rectOf: nodeSize)
         tileNode.strokeColor = .lightGray
@@ -28,14 +28,19 @@ extension SKShapeNode {
         default:
             break;
         }
-        return tileNode
+        let spriteNode = SKSpriteNode(color: tileNode.fillColor, size: nodeSize)
+        spriteNode.addChild(tileNode)
+        return spriteNode
     }
     
-    static func highlightedTile(ofSize size: CGFloat) -> SKShapeNode{
+    static func highlightedTile(ofSize size: CGFloat) -> SKSpriteNode{
         let nodeSize = CGSize(width: size, height: size)
         let tileNode = SKShapeNode(rectOf: nodeSize)
         tileNode.strokeColor = .red
-        return tileNode
+        
+        let spriteNode = SKSpriteNode(color: .clear, size: nodeSize)
+        spriteNode.addChild(tileNode)
+        return spriteNode
     }
 }
 
@@ -50,7 +55,12 @@ extension UIColor {
         
         let colorValues: [CGFloat] = [hue1, hue2, hue3].sorted {_, _ in arc4random() % 2 == 0}.map {$0/255}
         
-        return UIColor(red: colorValues[0], green: colorValues[1], blue: colorValues[2], alpha: 1)
+        let darknessScore = ((colorValues[0] * 255 * 299) + (colorValues[1] * 255 * 587) + (colorValues[2] * 255 * 114)) / 1000
+        if darknessScore > 125 {
+           return UIColor(red: colorValues[0], green: colorValues[1], blue: colorValues[2], alpha: 1)
+        } else {
+           return self.random
+        }
     }
     
     static func colorTheme(colors count: Int) -> ColorTheme {

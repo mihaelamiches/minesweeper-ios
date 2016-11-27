@@ -66,16 +66,28 @@ class GameScene: SKScene {
         
          newGame()
     }
-    
+
     func renderTiles() {
-        tilesLayer.removeAllChildren()
+        let oldBoard = tilesLayer.children
+        var newBoard = [SKNode]()
+        
         for row in 0..<rows {
             for column in 0..<columns {
-                let node = SKShapeNode.tile(game.board[column, row]!.tileType, ofSize: tileSize, colorTheme: colorTheme)
+                guard let tileType = game.board[column, row]?.tileType else { continue }
+                let node = SKSpriteNode.tile(tileType, ofSize: tileSize, colorTheme: colorTheme)
                 node.position = pointFrom(position: (column: column, row: row))
-                tilesLayer.addChild(node)
+                node.name = "\(column), \(row), \(tileType.hashValue)" //😒
+                newBoard.append(node)
+                if !oldBoard.contains{ $0.name == node.name } {
+                    node.alpha = 0
+                    let action = SKAction.fadeIn(withDuration: 0.5)
+                    node.run(action)
+                }
             }
         }
+        
+        tilesLayer.removeAllChildren()
+        newBoard.forEach{ tilesLayer.addChild($0) }
     }
     
     func newGame() {
@@ -94,7 +106,6 @@ class GameScene: SKScene {
         tileSize = min(size.width / CGFloat(game.difficulty.size.columns), size.height / CGFloat(game.difficulty.size.rows))
         
         renderTiles()
-        print("lvl", game.difficulty)
     }
     
     // MARK: Event handling
@@ -120,13 +131,15 @@ class GameScene: SKScene {
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let selectedPosition = selectedPosition else { return }
         
-        game.play(at: selectedPosition)
-        renderTiles()
+        if !game.isOver {
+            game.play(at: selectedPosition)
+            renderTiles()
+        }
         
         if game.isOver {
             label?.text = game.isWon ? "😎" : "☹️"
             if !game.isWon {
-                let node = SKShapeNode.highlightedTile(ofSize: tileSize)
+                let node = SKSpriteNode.highlightedTile(ofSize: tileSize)
                 node.position = pointFrom(position: selectedPosition)
                 tilesLayer.addChild(node)
             }
